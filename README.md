@@ -46,7 +46,8 @@ test/workflow.test.mjs                         structure checks for both workflo
    - `brief`: the one-sentence brief. The default is "Find 10 heads of sales at software companies in London with 20 to 200 staff and draft a short campaign about cutting time spent on lead research."
    - `budget`: the credit ceiling for the run. Default 100.
    - `dry_run`: `true` by default, so the first run is free.
-6. Save the workflow.
+6. Open **Prospector**, go to **Options** > **System Message** and replace `[Your name]` in the sign-off line with the name your emails are signed with. If you leave it, every draft is signed `[Your name]` and the report reminds you to fill it in before you approve.
+7. Save the workflow.
 
 ## Run
 

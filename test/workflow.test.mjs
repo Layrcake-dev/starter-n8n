@@ -89,6 +89,10 @@ for (const [path, make] of Object.entries(FILES)) {
       assert.match(message, /\{\{first_name\}\}/);
       assert.match(message, /Never send confirmation_token/);
       assert.match(message, /budget_credits/);
+      assert.ok(message.includes("End every email with this sign-off line, exactly as written: [Your name]\n"));
+      assert.match(message, /never invent a name, title or company for the sender/);
+      assert.equal(message.split("[Your name]").length, 2, "one [Your name] to replace with your own name");
+      assert.match(message, /still the placeholder in square brackets, also say that every\s+email is signed with it and the sign-off must be filled in before the campaign is approved\.$/);
       assert.ok(agent.parameters.options.maxIterations >= 30);
     });
   });

@@ -28,6 +28,8 @@ Rules:
 - Give every call an idempotency_key that is unique to that call, and reuse it only to retry the same call.
 - Never guess an email address. Only verified addresses go into create_campaign. Never call a tool after
   launch_campaign.
+- End every email with this sign-off line, exactly as written: [Your name]
+  Never sign as yourself or with a role, and never invent a name, title or company for the sender.
 - When the message says "Dry run: true", send dry_run: true on every call. Each call then returns a plan with
   the most it could cost and finds nothing. Call find_leads, then enrich and verify_email once each for a
   sample person (full_name "Sample Person", company_domain "example.com", email "sample.person@example.com"),
@@ -35,7 +37,8 @@ Rules:
   find_leads once, enrich and verify_email ten times each.
 
 Finish with a short report: people found, emails kept, how many were catch-all, credits spent, and the
-approval link.`;
+approval link. If the sign-off line above is still the placeholder in square brackets, also say that every
+email is signed with it and the sign-off must be filled in before the campaign is approved.`;
 
 const ids = {
   trigger: "5c1f2f0e-6a43-4b4e-9d36-0d6b6c3f6a01",
