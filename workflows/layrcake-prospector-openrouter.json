@@ -1,0 +1,162 @@
+{
+  "name": "Layrcake prospector (OpenRouter)",
+  "nodes": [
+    {
+      "id": "5c1f2f0e-6a43-4b4e-9d36-0d6b6c3f6a01",
+      "name": "Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "5c1f2f0e-6a43-4b4e-9d36-0d6b6c3f6a02",
+      "name": "Brief and budget",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "brief",
+              "value": "Find 10 heads of sales at software companies in London with 20 to 200 staff and draft a short campaign about cutting time spent on lead research.",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "budget",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "a3",
+              "name": "dry_run",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5c1f2f0e-6a43-4b4e-9d36-0d6b6c3f6a03",
+      "name": "Prospector",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        460,
+        0
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.brief }}\n\nRun budget: {{ $json.budget }} credits. Dry run: {{ $json.dry_run }}.",
+        "options": {
+          "systemMessage": "You run outbound prospecting with the Layrcake tools. Work from the user's one-sentence brief. The message ends with the run budget and whether this is a dry run.\n\n1. Call find_leads once. Send audience (the brief in your own words) plus at least one of titles, industries,\n   locations or company_domains, and company_headcount when the brief gives a size. Use limit 10.\n2. For each lead, call enrich with person.full_name and person.company_domain and want [\"work_email\"].\n3. Call verify_email on every email you found. Keep valid and catch_all_valid. Drop the rest.\n4. Call create_campaign with the kept leads (email, first_name, last_name, company_name, location) and two or\n   three steps. Each email is under 90 words, plain text, written for this audience, uses {{first_name}},\n   has no links and makes no claims you cannot back up. Set wait_days to 3 on later steps.\n5. Call launch_campaign with the campaign_id only. It sends nothing. It returns a preview and an approval link\n   that a person opens to approve. Stop there. Never send confirmation_token.\n\nRules:\n- Every find_leads, enrich and verify_email call sends budget_credits: what is left of the run budget. Add up\n  credits_charged from each result. When the budget is spent, stop and report what you have.\n- Give every call an idempotency_key that is unique to that call, and reuse it only to retry the same call.\n- Never guess an email address. Only verified addresses go into create_campaign. Never call a tool after\n  launch_campaign.\n- When the message says \"Dry run: true\", send dry_run: true on every call. Each call then returns a plan with\n  the most it could cost and finds nothing. Call find_leads, then enrich and verify_email once each for a\n  sample person (full_name \"Sample Person\", company_domain \"example.com\", email \"sample.person@example.com\"),\n  then create_campaign with that one sample lead. Skip launch_campaign. Report the estimate for 10 people:\n  find_leads once, enrich and verify_email ten times each.\n\nFinish with a short report: people found, emails kept, how many were catch-all, credits spent, and the\napproval link.",
+          "maxIterations": 40
+        }
+      }
+    },
+    {
+      "id": "5c1f2f0e-6a43-4b4e-9d36-0d6b6c3f6a04",
+      "position": [
+        380,
+        220
+      ],
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "parameters": {
+        "model": "anthropic/claude-sonnet-5.5",
+        "options": {}
+      }
+    },
+    {
+      "id": "5c1f2f0e-6a43-4b4e-9d36-0d6b6c3f6a05",
+      "name": "Layrcake",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [
+        600,
+        220
+      ],
+      "parameters": {
+        "endpointUrl": "https://mcp.layrcake.dev/mcp",
+        "serverTransport": "httpStreamable",
+        "authentication": "bearerAuth",
+        "include": "selected",
+        "includeTools": [
+          "find_leads",
+          "enrich",
+          "verify_email",
+          "create_campaign",
+          "launch_campaign"
+        ],
+        "options": {
+          "timeout": 120000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Run": {
+      "main": [
+        [
+          {
+            "node": "Brief and budget",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brief and budget": {
+      "main": [
+        [
+          {
+            "node": "Prospector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Prospector",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layrcake": {
+      "ai_tool": [
+        [
+          {
+            "node": "Prospector",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
